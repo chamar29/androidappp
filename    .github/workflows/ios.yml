@@ -1,0 +1,39 @@
+name: Build iOS Simulator
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Dar permisos a gradlew
+        run: chmod +x gradlew
+
+      - name: Ver esquemas disponibles
+        run: xcodebuild -list -project iosApp/iosApp.xcodeproj
+
+      - name: Compilar para simulador
+        run: |
+          xcodebuild -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -derivedDataPath xcbuild \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Comprimir la app
+        run: |
+          cd xcbuild/Build/Products/Debug-iphonesimulator
+          zip -r iosApp.zip *.app
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iosApp
+          path: xcbuild/Build/Products/Debug-iphonesimulator/iosApp.zip
